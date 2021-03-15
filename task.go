@@ -2,6 +2,7 @@ package grsync
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"math"
 	"strconv"
@@ -70,7 +71,7 @@ func NewTask(source, destination string, rsyncOptions RsyncOptions) *Task {
 	rsyncOptions.Partial = true
 	rsyncOptions.Progress = true
 	rsyncOptions.Archive = true
-
+	fmt.Println("in rsync")
 	return &Task{
 		rsync: NewRsync(source, destination, rsyncOptions),
 		state: &State{},
@@ -85,7 +86,7 @@ func NewCustomTask(bin string, source []string, destination string, rsyncOptions
 	rsyncOptions.Partial = true
 	rsyncOptions.Progress = true
 	rsyncOptions.Archive = true
-
+	log().Warn("in rsync")
 	return &Task{
 		rsync: NewCustomRsync(bin, source, destination, rsyncOptions, workdir, envs...),
 		state: &State{},
