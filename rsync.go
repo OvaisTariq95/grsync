@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
 	"strings"
 )
@@ -207,6 +208,7 @@ func (r Rsync) StderrPipe() (io.ReadCloser, error) {
 
 // Run start rsync task
 func (r Rsync) Run() error {
+	log().Debugf("executing command %s", r.cmd.String())
 	if !isExist(r.Destination) {
 		if err := createDir(r.Destination); err != nil {
 			return err
@@ -227,6 +229,27 @@ func NewRsync(source, destination string, options RsyncOptions) *Rsync {
 		Source:      source,
 		Destination: destination,
 		cmd:         exec.Command("rsync", arguments...),
+	}
+}
+
+// NewCustomRsync returns task with described options
+func NewCustomRsync(bin string, sources []string, destination string, options RsyncOptions, workdir string, envs ...string) *Rsync {
+	arguments := append(append(getArguments(options), append([]string{"--"}, sources...)...), destination)
+	cmd := exec.Command("sh", "-c", fmt.Sprintf("%s %s", bin, strings.Join(arguments, " ")))
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd", "/V", "/C", fmt.Sprintf("%s %s", bin, strings.Join(arguments, " ")))
+	}
+
+	cmd.Env = append(os.Environ(), envs...)
+
+	if workdir != "" {
+		cmd.Dir = workdir
+	}
+
+	return &Rsync{
+		Source:      strings.Join(sources, ","),
+		Destination: destination,
+		cmd:         cmd,
 	}
 }
 
